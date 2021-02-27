@@ -16,18 +16,18 @@ print("Importing modules took:", round(import_end - import_start,2),"seconds.")
 
 RANDOM_STATE = 66 #Sets seed for splitting train and test set
 FRAC = 0.85 #Set fraction of train dataset
-EPOCHS = 5 #Number of epochs to train model
+EPOCHS = 100 #Number of epochs to train model
+BATCH_SIZE = 1000
 
-#Create and train tensorflow model of a neural network
-def create_train_model(train_features):
+#Create tensorflow model of a neural network
+def create_model(train_features):
 
     #Create model object
     model = tf.keras.models.Sequential()
 
     #Add layer containing feature columns to model
     feature_columns = []
-
-    for i in train_features.columns[:-1]:
+    for i in train_features.columns:
         feature_columns.append(tf.feature_column.numeric_column(i))
     feature_layer = tf.keras.layers.DenseFeatures(feature_columns)
     model.add(feature_layer)
@@ -37,18 +37,35 @@ def create_train_model(train_features):
 
     #Compile layers into model for TensorFlow execution
     model.compile(
-        optimizer='adam',
-        loss="mse",
-        metrics= ['accuracy']
+        optimizer = 'adam',
+        loss = "mean_squared_error",
+        metrics = ['accuracy']
     )
 
     return model
+
+#Train model
+def train_model(model, train_dataset):
+    #Split dataset into features and lables
+    train_features = {name:np.array(value) for name, value in train_dataset.items()}
+    train_labels = np.array(train_features.pop('Rings'))
+
+    ann_model_fit = ann_model.fit(
+        x=train_features,
+        y=train_labels,
+        batch_size = None,
+        epochs=EPOCHS,
+        verbose=1,
+        shuffle=True)  
+
+    return ann_model_fit
+
 
 #Initialize console object
 console = Console()
 
 #Read file into dataframe
-column_names = ['Sex','Length','Diameter','Height','Whole weight','Shucked weight','Viscera weight','Shell weight','Rings']
+column_names = ['Sex','Length','Diameter','Height','WholeWeight','ShuckedWeight','VisceraWeight','ShellWeight','Rings']
 df = pd.read_csv("abalone.data", names=column_names)
 
 #Preprocessing with label encoder
@@ -66,9 +83,19 @@ test_dataset = df.drop(train_dataset.index)
 
 #Seperate features from labels
 train_features = train_dataset.copy()
-train_lables = train_features.pop('Rings')
+train_labels = train_features.pop('Rings')
 test_features = test_dataset.copy()
-test_lables = test_dataset.pop('Rings')
+test_lables = test_features.pop('Rings')
 
-ann_model = create_train_model(train_features)
-#ann_model.fit(train_features,train_lables, epochs=EPOCHS)
+print("Print train")
+print(train_features)
+print(train_labels)
+print("Print test")
+print(test_features)
+print(test_lables)
+
+#Create model
+ann_model = create_model(train_features)
+
+#Train model
+ann_model_fit = train_model(ann_model, train_dataset)
