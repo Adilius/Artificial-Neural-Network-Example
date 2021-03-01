@@ -48,7 +48,7 @@ def create_model(train_features):
 def train_model(model, train_dataset):
     #Split dataset into features and lables
     train_features = {name:np.array(value) for name, value in train_dataset.items()}
-    train_labels = np.array(train_features.pop('Rings'))
+    train_labels = np.array(train_features.pop('Class'))
 
     ann_model_fit = ann_model.fit(
         x=train_features,
@@ -65,8 +65,8 @@ def train_model(model, train_dataset):
 console = Console()
 
 #Read file into dataframe
-column_names = ['Sex','Length','Diameter','Height','WholeWeight','ShuckedWeight','VisceraWeight','ShellWeight','Rings']
-df = pd.read_csv("abalone.data", names=column_names)
+column_names = ['IndustrailRisk','ManagementRisk','FinancialFlexibility','Credibility','Competitiveness','OperatingRisk','Class']
+df = pd.read_csv("Qualitative_Bankruptcy.data", names=column_names)
 
 #Preprocessing with label encoder
 categorical_feature_mask = df.dtypes==object #Categorical mask
@@ -83,9 +83,9 @@ test_dataset = df.drop(train_dataset.index)
 
 #Seperate features from labels
 train_features = train_dataset.copy()
-train_labels = train_features.pop('Rings')
+train_labels = train_features.pop('Class')
 test_features = test_dataset.copy()
-test_lables = test_features.pop('Rings')
+test_lables = test_features.pop('Class')
 
 print("Print train")
 print(train_features)
