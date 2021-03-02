@@ -3,7 +3,6 @@ import_start = time.time()
 
 import os   #Turn off annoying tensorflow cuda error message
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' #Turn off annoying tensorflow cuda error message
-from rich.console import Console    #Rich used for pretty console printing
 
 import pandas as pd
 import numpy as np
@@ -16,8 +15,7 @@ print("Importing modules took:", round(import_end - import_start,2),"seconds.")
 
 RANDOM_STATE = 66 #Sets seed for splitting train and test set
 FRAC = 0.85 #Set fraction of train dataset
-EPOCHS = 100 #Number of epochs to train model
-BATCH_SIZE = 1000
+EPOCHS = 1000 #Number of epochs to train model
 
 #Create tensorflow model of a neural network
 def create_model(train_features):
@@ -33,7 +31,10 @@ def create_model(train_features):
     model.add(feature_layer)
 
     #Add linear layer to model for simple linear regressor
-    model.add(tf.keras.layers.Dense(units=1, input_shape=(1,)))
+    model.add(tf.keras.layers.Dense(
+        units=1,
+        input_shape=(6,),
+        activation='sigmoid'))
 
     #Compile layers into model for TensorFlow execution
     model.compile(
@@ -50,6 +51,7 @@ def train_model(model, train_dataset):
     train_features = {name:np.array(value) for name, value in train_dataset.items()}
     train_labels = np.array(train_features.pop('Class'))
 
+    #Train model
     ann_model_fit = ann_model.fit(
         x=train_features,
         y=train_labels,
@@ -60,9 +62,14 @@ def train_model(model, train_dataset):
 
     return ann_model_fit
 
+#Evalute model
+def evalute_model(model, test_df):
+    test_features = {name:np.array(value) for name, value in test_df.items()}
+    test_label = np.array(test_features.pop('Class')) # isolate the label
 
-#Initialize console object
-console = Console()
+    result = model.evaluate(x=test_features, y=test_lables, batch_size=128)
+    print(result)
+
 
 #Read file into dataframe
 column_names = ['IndustrailRisk','ManagementRisk','FinancialFlexibility','Credibility','Competitiveness','OperatingRisk','Class']
@@ -87,15 +94,21 @@ train_labels = train_features.pop('Class')
 test_features = test_dataset.copy()
 test_lables = test_features.pop('Class')
 
-print("Print train")
-print(train_features)
-print(train_labels)
-print("Print test")
-print(test_features)
-print(test_lables)
+#print("Print train")
+#print(train_features)
+#print(train_labels)
+#print("Print test")
+#print(test_features)
+#print(test_lables)
 
 #Create model
 ann_model = create_model(train_features)
 
 #Train model
+train_start = time.time()
 ann_model_fit = train_model(ann_model, train_dataset)
+train_end = time.time()
+print("Training model took:", round(train_end - train_start,2),"seconds.")
+
+#Evalute model
+evalute_model(ann_model, test_dataset)
