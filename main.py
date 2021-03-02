@@ -10,6 +10,7 @@ import tensorflow as tf
 from sklearn import preprocessing
 from tensorflow import keras
 from tensorflow.keras import layers
+import matplotlib.pyplot as plt
 import_end = time.time()
 print("Importing modules took:", round(import_end - import_start,2),"seconds.")
 
@@ -70,6 +71,16 @@ def evalute_model(model, test_df):
     result = model.evaluate(x=test_features, y=test_lables, batch_size=128)
     print(result)
 
+#Plot accuracy curve from training
+def plot_acc_curve(epochs, accuracy):
+  plt.figure()
+  plt.xlabel("Epoch")
+  plt.ylabel("Accuracy")
+
+  plt.plot(epochs, accuracy, label="Gain in accuracy")
+  plt.legend()
+  plt.ylim([accuracy.min()*0.95, accuracy.max() * 1.03])
+  plt.show()
 
 #Read file into dataframe
 column_names = ['IndustrailRisk','ManagementRisk','FinancialFlexibility','Credibility','Competitiveness','OperatingRisk','Class']
@@ -94,13 +105,6 @@ train_labels = train_features.pop('Class')
 test_features = test_dataset.copy()
 test_lables = test_features.pop('Class')
 
-#print("Print train")
-#print(train_features)
-#print(train_labels)
-#print("Print test")
-#print(test_features)
-#print(test_lables)
-
 #Create model
 ann_model = create_model(train_features)
 
@@ -112,3 +116,9 @@ print("Training model took:", round(train_end - train_start,2),"seconds.")
 
 #Evalute model
 evalute_model(ann_model, test_dataset)
+
+#Print accuracy curve
+history_dataframe = pd.DataFrame(ann_model_fit.history)
+history_epochs = ann_model_fit.epoch
+history_accuracy = history_dataframe['accuracy']
+plot_acc_curve(history_epochs, history_accuracy)
